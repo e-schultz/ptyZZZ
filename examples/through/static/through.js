@@ -1,3 +1,5 @@
+import { wirePtyMouse } from "/ptyzzz-client.js?v=1";
+
 const PANE = "p1";
 const NAMED = ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Home","End",
   "PageUp","PageDown","Insert","Delete","Enter","Tab","Backspace","Escape"];
@@ -314,6 +316,11 @@ addEventListener("paste", ev => {
   if (!text) return;
   ev.preventDefault();
   send({t:"paste", s:text});
+});
+
+wirePtyMouse({
+  root: pane,
+  send: (_name, frame) => send(frame),
 });
 
 document.addEventListener("click", ev => {

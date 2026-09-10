@@ -166,6 +166,8 @@ const TMPL = r#'<!doctype html>
   <div id=panes>__PANES_HTML__</div>
   <button id=split title="toggle split direction"></button>
   <script type=module>
+    import { wirePtyMouse } from "/ptyzzz-client.js?v=1";
+
     const PANES = __PANES_JS__;
     // The client is byte-blind: it ships semantic key events and the
     // emulator encodes them against its live input modes (application
@@ -266,6 +268,9 @@ const TMPL = r#'<!doctype html>
     });
     setFocus(focused);
     parkFocus();
+
+    wirePtyMouse({root: document.getElementById("panes"), send});
+
     // ?drive replays a key/paste script from the URL hash (base64 JSON, the
     // bench/keyprobe.json shape) as synthesized events, exercising the real
     // keydown/paste listeners end to end. Test harness affordance, like
@@ -485,7 +490,7 @@ let PAGE = (
     })
 
     # The body is one or more ptyZZZ command frames as NDJSON ({t:key},
-    # {t:paste}, {t:input}, {t:resize}), passed through verbatim to the
+    # {t:paste}, {t:mouse}, {t:input}, {t:resize}), passed through verbatim to the
     # pane's service; the client batches queued frames into one POST.
     (route {method: "POST", path: "/input"} {|req ctx|
       let body = $in | into string | str trim --right --char "\n"
@@ -496,6 +501,11 @@ let PAGE = (
       } else {
         "unknown pane" | metadata set { merge {'http.response': {status: 400}} }
       }
+    })
+
+    # Reusable browser adapter for ptyZZZ's semantic mouse protocol.
+    (route {method: "GET", path: "/ptyzzz-client.js"} {|req ctx|
+      .static ($HERE | path join "static") "/ptyzzz-client.js"
     })
 
     # Vendored terminal font. .static sets the content-type.

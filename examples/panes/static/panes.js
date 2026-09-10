@@ -1,3 +1,5 @@
+import { wirePtyMouse } from "/ptyzzz-client.js?v=1";
+
 const NAMED = ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Home","End",
   "PageUp","PageDown","Insert","Delete","Enter","Tab","Backspace","Escape"];
 const NOFIT = new URLSearchParams(location.search).has("nofit");
@@ -338,6 +340,12 @@ document.addEventListener("click", e => {
 document.getElementById("mode-badge").addEventListener("click", () => {
   setMode(mode === "focus" ? "navigate" : "focus");
   if (mode === "focus" && selected) parkFocus();
+});
+
+wirePtyMouse({
+  root: strip,
+  send,
+  enabled: () => mode === "focus",
 });
 
 // An unpinned pane relies on scroll anchoring to hold the line under the
