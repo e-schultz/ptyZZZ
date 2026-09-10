@@ -78,24 +78,34 @@ export function wirePtyMouse({
     const button = buttons[ev.button];
     const name = paneName(pane);
     if (!hit || !button || !name) return;
-    active = {pane, name, button, point: hit.point};
-    send(name, {t: "mouse", kind: "press", button, ...hit.point, mods: mods(ev)});
+    const eventMods = mods(ev);
+    active = {pane, name, button, point: hit.point, mods: eventMods};
+    send(name, {t: "mouse", kind: "press", button, ...hit.point, mods: eventMods});
     ev.preventDefault();
   }
 
-  function onUp(ev) {
+  function release(ev) {
     if (!active) return;
-    const hit = locate(active.pane, ev);
+    const hit = ev ? locate(active.pane, ev) : null;
     const point = hit?.point || active.point;
-    send(active.name, {
+    const held = active;
+    send(held.name, {
       t: "mouse",
       kind: "release",
-      button: active.button,
+      button: held.button,
       ...point,
-      mods: mods(ev),
+      mods: ev ? mods(ev) : held.mods,
     });
     active = null;
-    ev.preventDefault();
+    ev?.preventDefault();
+  }
+
+  function onUp(ev) {
+    release(ev);
+  }
+
+  function onBlur() {
+    release();
   }
 
   function onMove(ev) {
@@ -104,11 +114,22 @@ export function wirePtyMouse({
     const hit = locate(pane, ev);
     const name = paneName(pane);
     if (!hit || !name) return;
-    if (active) active.point = hit.point;
-    const key = `${name}:${hit.point.x}:${hit.point.y}:${mods(ev)}`;
+    const eventMods = mods(ev);
+    if (active) {
+      active.point = hit.point;
+      active.mods = eventMods;
+    }
+    const key = [
+      name,
+      hit.point.x,
+      hit.point.y,
+      hit.point.x_pixel_offset,
+      hit.point.y_pixel_offset,
+      eventMods,
+    ].join(":");
     if (key === lastMove) return;
     lastMove = key;
-    send(name, {t: "mouse", kind: "move", ...hit.point, mods: mods(ev)});
+    send(name, {t: "mouse", kind: "move", ...hit.point, mods: eventMods});
   }
 
   function onOut(ev) {
@@ -167,6 +188,7 @@ export function wirePtyMouse({
   root.addEventListener("wheel", onWheel, {passive: false});
   root.addEventListener("contextmenu", onContextMenu);
   document.addEventListener("mouseup", onUp, {capture: true});
+  window.addEventListener("blur", onBlur);
 
   return () => {
     root.removeEventListener("mousedown", onDown);
@@ -175,5 +197,6 @@ export function wirePtyMouse({
     root.removeEventListener("wheel", onWheel);
     root.removeEventListener("contextmenu", onContextMenu);
     document.removeEventListener("mouseup", onUp, {capture: true});
+    window.removeEventListener("blur", onBlur);
   };
 }

@@ -4,6 +4,7 @@ import { wirePtyMouse } from "../static/ptyzzz-client.js";
 
 function fixture() {
   globalThis.document = new EventTarget();
+  globalThis.window = new EventTarget();
   const root = new EventTarget();
   const cursor = {dataset: {mouseGrabbed: "true"}};
   const rows = Array.from({length: 24}, (_, y) => ({
@@ -63,6 +64,26 @@ test("captures only while the terminal has grabbed the mouse", () => {
   f.destroy();
 });
 
+test("releases an active button when the window loses focus", () => {
+  const f = fixture();
+  fire(f.root, "mousedown", {ctrlKey: true});
+  fire(window, "blur");
+  assert.deepEqual(f.frames.map(({frame}) => frame.kind), ["press", "release"]);
+  assert.deepEqual(f.frames[1].frame, {
+    t: "mouse",
+    kind: "release",
+    button: "left",
+    x: 2,
+    y: 4,
+    x_pixel_offset: 5,
+    y_pixel_offset: 5,
+    mods: 4,
+  });
+  fire(window, "blur");
+  assert.equal(f.frames.length, 2);
+  f.destroy();
+});
+
 test("accumulates trackpad deltas into terminal wheel steps", () => {
   const f = fixture();
   for (let i = 0; i < 4; i++) fire(f.root, "wheel", {deltaY: 4});
@@ -70,6 +91,16 @@ test("accumulates trackpad deltas into terminal wheel steps", () => {
   fire(f.root, "wheel", {deltaY: 4});
   assert.equal(f.frames.length, 1);
   assert.equal(f.frames[0].frame.button, "wheeldown");
+  f.destroy();
+});
+
+test("reports pixel movement within the same cell", () => {
+  const f = fixture();
+  fire(f.root, "mousemove", {clientX: 25});
+  fire(f.root, "mousemove", {clientX: 26});
+  assert.equal(f.frames.length, 2);
+  assert.equal(f.frames[0].frame.x, f.frames[1].frame.x);
+  assert.notEqual(f.frames[0].frame.x_pixel_offset, f.frames[1].frame.x_pixel_offset);
   f.destroy();
 });
 
