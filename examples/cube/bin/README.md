@@ -29,3 +29,5 @@ play_style is built against musl so it runs on any glibc. macOS has no musl
 target. Drop `--target` there.
 
 Vendored: anima f704fef, formerly yazelix-screen. Built with rustc 1.96.1.
+The `-aarch64-apple-darwin` pair was built with rustc 1.98.1 from anima
+f704fef and asciiquarium-rs beef5b7.

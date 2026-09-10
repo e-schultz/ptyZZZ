@@ -9,3 +9,4 @@ node_modules
 /panes-store
 /through-store
 /examples/through/shots/
+/examples/cube/store/
