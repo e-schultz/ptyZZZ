@@ -17,6 +17,7 @@ const HERE = (path self | path dirname)
 const TPL = ($HERE | path join "templates")
 const PTYZZZ = ($HERE | path join ".." ".." "target" "release" "ptyZZZ" | path expand)
 const FONTS = ($HERE | path join ".." ".." "static" "fonts")
+const PTYZZZ_STATIC = ($HERE | path join ".." ".." "static")
 
 if not ($PTYZZZ | path exists) {
   error make {msg: $"panes: missing ($PTYZZZ) -- cargo build --release"}
@@ -368,6 +369,10 @@ if ($HTTP_NU.store? | default null) != null {
 
     (route {method: "GET", path-matches: "/static/:file"} {|req ctx|
       .static ($HERE | path join "static") $"/($ctx.file)"
+    })
+
+    (route {method: "GET", path: "/ptyzzz-client.js"} {|req ctx|
+      .static $PTYZZZ_STATIC "/ptyzzz-client.js"
     })
 
     (route {method: "GET", path-matches: "/fonts/:file"} {|req ctx|

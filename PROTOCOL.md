@@ -31,7 +31,10 @@ move may omit `button`. `mods` uses the same bitfield as `key`. Optional
 The emulator encodes the event using the application's active mouse protocol.
 Clients should only capture mouse input when the rendered cursor element has
 `data-mouse-grabbed="true"`; Shift should bypass capture for native text
-selection and scrollback.
+selection and scrollback. `static/ptyzzz-client.js` implements this browser
+policy, coordinate mapping, motion deduplication, and wheel normalization. Its
+`wirePtyMouse` export accepts a pane container and the application's existing
+`send(pane, frame)` function.
 
 `screen` asks for a keyframe on the next emit, whether or not anything
 changed. An adapter sends it when a subscriber joins: the stored keyframe can
